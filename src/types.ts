@@ -8,12 +8,20 @@ export enum StepType {
   CLOSEOUT = 'closeout'
 }
 
+export interface VibeResult {
+  rating: number;
+  critique: string;
+  isVibeApproved: boolean;
+}
+
 export interface StepData {
   userInput: string;
   aiOutput: string;
   insights?: string[];
   isCompleted: boolean;
   lastSaved: string;
+  vibeCheck?: VibeResult;
+  isStreaming?: boolean;
 }
 
 export interface Project {
@@ -27,7 +35,13 @@ export interface Project {
   updatedAt: string;
 }
 
+export interface ProjectCollection {
+  projects: Project[];
+  activeProjectId: string;
+}
+
 export const STORAGE_KEY = 'vibe_coder_studio_project';
+export const PROJECTS_STORAGE_KEY = 'vibe_coder_projects_vault';
 export const API_KEYS_STORAGE_KEY = 'vibe_coder_api_keys';
 
 export const STEPS: { type: StepType; label: string; description: string; placeholder: string; prompt: string }[] = [

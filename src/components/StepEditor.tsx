@@ -83,6 +83,22 @@ export const StepEditor = ({
             className="w-full h-44 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 md:p-8 text-black dark:text-white placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all leading-relaxed font-mono text-sm shadow-sm"
           />
 
+        {currentStepData.vibeCheck && (
+          <div className={`p-4 rounded-xl border flex items-start gap-4 animate-in fade-in slide-in-from-top-2 duration-500 ${currentStepData.vibeCheck.isVibeApproved ? 'bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30'}`}>
+            <div className="flex-1">
+               <div className="flex items-center justify-between mb-2">
+                 <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Vibration_Check</span>
+                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${currentStepData.vibeCheck.isVibeApproved ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-red-500 text-white'}`}>
+                   FREQ_{currentStepData.vibeCheck.rating}/10
+                 </span>
+               </div>
+               <p className={`text-sm font-medium italic ${currentStepData.vibeCheck.isVibeApproved ? 'text-zinc-600 dark:text-zinc-400' : 'text-red-600 dark:text-red-400'}`}>
+                 "{currentStepData.vibeCheck.critique}"
+               </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-4">
           <button
             onClick={handleGenerate}

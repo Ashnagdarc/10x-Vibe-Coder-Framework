@@ -12,8 +12,9 @@ import {
   X,
   ChevronRight
 } from 'lucide-react';
-import { StepType, StepData, Project, STEPS, STORAGE_KEY } from './types';
-import { generateStepOutput, generateFinalManifest, generateInsights, generateSummaryForNextStep } from './services/geminiService';
+import { StepType, StepData, Project, ProjectCollection, STEPS, STORAGE_KEY, PROJECTS_STORAGE_KEY } from './types';
+import { generateStepOutputStreaming, generateFinalManifest, generateInsights, generateSummaryForNextStep, performVibeCheck } from './services/geminiService';
+import { Vault } from './components/Vault';
 
 // Components
 import { Sidebar } from './components/Sidebar';
@@ -40,6 +41,10 @@ const INITIAL_PROJECT: Project = {
 };
 
 export default function App() {
+  const [vault, setVault] = useState<ProjectCollection>({
+    projects: [INITIAL_PROJECT],
+    activeProjectId: INITIAL_PROJECT.id
+  });
   const [project, setProject] = useState<Project>(INITIAL_PROJECT);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingManifest, setIsGeneratingManifest] = useState(false);
@@ -47,18 +52,22 @@ export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isPreviewMode, setIsPreviewMode] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout|null>(null);
 
   // Load from local storage
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    const savedVault = localStorage.getItem(PROJECTS_STORAGE_KEY);
+    if (savedVault) {
       try {
-        setProject(JSON.parse(saved));
+        const parsedVault: ProjectCollection = JSON.parse(savedVault);
+        const activeProject = parsedVault.projects.find(p => p.id === parsedVault.activeProjectId) || parsedVault.projects[0];
+        setVault(parsedVault);
+        setProject(activeProject);
       } catch (e) {
-        console.error("Failed to parse saved project", e);
+        console.error("Failed to parse saved vault", e);
       }
     }
     setIsLoaded(true);
@@ -68,7 +77,13 @@ export default function App() {
   useEffect(() => {
     if (isLoaded) {
       setSaveStatus('saving');
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+      
+      const updatedVault = {
+        ...vault,
+        projects: vault.projects.map(p => p.id === project.id ? project : p)
+      };
+      
+      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(updatedVault));
       
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
@@ -77,6 +92,46 @@ export default function App() {
       }, 500);
     }
   }, [project, isLoaded]);
+
+  const switchProject = (id: string) => {
+    const nextProject = vault.projects.find(p => p.id === id);
+    if (nextProject) {
+      setVault(prev => ({ ...prev, activeProjectId: id }));
+      setProject(nextProject);
+      setManifest(null);
+      setIsVaultOpen(false);
+    }
+  };
+
+  const createNewProject = () => {
+    const newProject: Project = {
+      ...INITIAL_PROJECT,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setVault(prev => ({
+      ...prev,
+      projects: [...prev.projects, newProject],
+      activeProjectId: newProject.id
+    }));
+    setProject(newProject);
+    setManifest(null);
+    setIsVaultOpen(false);
+  };
+
+  const deleteProject = (id: string) => {
+    if (vault.projects.length <= 1) return;
+    const newProjects = vault.projects.filter(p => p.id !== id);
+    const nextActive = newProjects[0].id;
+    setVault({
+      projects: newProjects,
+      activeProjectId: nextActive
+    });
+    if (project.id === id) {
+      setProject(newProjects[0]);
+    }
+  };
 
   const handleStepChange = (type: StepType) => {
     setProject(prev => ({ ...prev, currentStep: type }));
@@ -103,21 +158,33 @@ export default function App() {
     if (!currentStepConfig) return;
 
     setIsGenerating(true);
+    updateStepData(project.currentStep, { aiOutput: "", isStreaming: true });
     
+    // Perform Vibe Check first
+    const vibe = await performVibeCheck(project.steps[project.currentStep].userInput, currentStepConfig.label);
+    updateStepData(project.currentStep, { vibeCheck: vibe });
+
     const stepIndex = STEPS.findIndex(s => s.type === project.currentStep);
     const previousStepOutput = stepIndex > 0 ? project.steps[STEPS[stepIndex - 1].type].aiOutput : "";
 
-    const result = await generateStepOutput(
+    const stream = generateStepOutputStreaming(
       currentStepConfig.prompt,
       project.steps[project.currentStep].userInput,
       previousStepOutput
     );
 
-    const insights = await generateInsights(result);
+    let fullOutput = "";
+    for await (const chunk of stream) {
+      fullOutput += chunk;
+      updateStepData(project.currentStep, { aiOutput: fullOutput });
+    }
+
+    const insights = await generateInsights(fullOutput);
 
     updateStepData(project.currentStep, { 
-      aiOutput: result,
-      insights: insights 
+      aiOutput: fullOutput,
+      insights: insights,
+      isStreaming: false
     });
     
     // Auto-populate next step input if empty
@@ -126,7 +193,7 @@ export default function App() {
       const nextStepType = STEPS[nextIdx].type;
       const nextStepLabel = STEPS[nextIdx].label;
       if (!project.steps[nextStepType].userInput) {
-        const nextStepContext = await generateSummaryForNextStep(result, nextStepLabel);
+        const nextStepContext = await generateSummaryForNextStep(fullOutput, nextStepLabel);
         updateStepData(nextStepType, { userInput: `[PREVIOUS PHASE CONTEXT]: ${nextStepContext}\n\n[OBJECTIVE]: ` });
       }
     }
@@ -293,6 +360,7 @@ export default function App() {
             <div className="p-8 pb-12 grid grid-cols-2 gap-4 relative z-10">
                <button onClick={handleExport} className="py-5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all">Export</button>
                <button onClick={() => { startOnboarding(); setIsMobileMenuOpen(false); }} className="py-5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all">Nodes</button>
+               <button onClick={() => { setIsVaultOpen(true); setIsMobileMenuOpen(false); }} className="col-span-2 py-5 bg-white text-black text-[9px] font-black uppercase tracking-[0.3em] transition-all">Open Project Vault</button>
                <button onClick={() => { handleReset(); setIsMobileMenuOpen(false); }} className="col-span-2 py-4 text-[9px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-white transition-colors">Terminate Framework Session</button>
             </div>
           </motion.div>
@@ -313,6 +381,7 @@ export default function App() {
           handleExport={handleExport}
           handleReset={handleReset}
           startOnboarding={startOnboarding}
+          onOpenVault={() => setIsVaultOpen(true)}
         />
       </div>
 
@@ -376,6 +445,7 @@ export default function App() {
               <FinalManifest 
                 manifest={manifest}
                 isGeneratingManifest={isGeneratingManifest}
+                projectName={project.name}
                 handleGenerateManifest={handleGenerateManifest}
               />
             )}
@@ -390,6 +460,15 @@ export default function App() {
           className="hidden md:flex"
         />
       </main>
+
+      <Vault 
+        vault={vault}
+        isOpen={isVaultOpen}
+        onClose={() => setIsVaultOpen(false)}
+        onSwitch={switchProject}
+        onCreate={createNewProject}
+        onDelete={deleteProject}
+      />
     </div>
   );
 }

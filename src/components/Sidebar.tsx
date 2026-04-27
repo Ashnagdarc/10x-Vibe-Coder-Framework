@@ -6,6 +6,7 @@ import {
   Edit2,
   Download,
   Key,
+  Archive,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -22,6 +23,7 @@ interface SidebarProps {
   handleExport: () => void;
   handleReset: () => void;
   startOnboarding: () => void;
+  onOpenVault: () => void;
 }
 
 export const Sidebar = ({
@@ -36,7 +38,8 @@ export const Sidebar = ({
   updateProjectName,
   handleExport,
   handleReset,
-  startOnboarding
+  startOnboarding,
+  onOpenVault
 }: SidebarProps) => {
   return (
     <aside className="w-72 border-r border-[var(--border)] bg-[var(--aside)] flex flex-col shrink-0">
@@ -48,7 +51,16 @@ export const Sidebar = ({
           </div>
           <ThemeSwitch iconSize={14} />
         </div>
-        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">Studio Edition v1.0</p>
+        <div className="flex items-center justify-between mt-2">
+           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">Studio Edition v1.0</p>
+           <button 
+            onClick={onOpenVault}
+            className="flex items-center gap-1.5 px-2 py-1 rounded bg-black dark:bg-white text-white dark:text-black text-[8px] font-black uppercase tracking-tighter"
+           >
+              <Archive className="w-2.5 h-2.5" />
+              Vault
+           </button>
+        </div>
       </div>
 
       <nav className="px-3 flex-1 space-y-1 overflow-y-auto">

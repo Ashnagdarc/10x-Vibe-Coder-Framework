@@ -1,6 +1,69 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export async function* generateStepOutputStreaming(prompt: string, input: string, previousOutput: string = "") {
+  try {
+    const fullPrompt = prompt
+      .replace("{input}", input)
+      .replace("{previousOutput}", previousOutput);
+
+    const result = await ai.models.generateContentStream({
+      model: "gemini-3-flash-preview",
+      contents: fullPrompt,
+      config: {
+        systemInstruction: "You are the '10x Vibe Coder AI', a high-performance software architect. Your goal is to provide concise, punchy, and highly actionable advice. Use markdown. Focus on the 'vibe' and technical excellence. Always end with a short 'Actionable Next Step' summary.",
+        temperature: 0.7,
+      },
+    });
+
+    for await (const chunk of result) {
+      if (chunk.text) {
+        yield chunk.text;
+      }
+    }
+  } catch (error) {
+    console.error("AI Streaming Error:", error);
+    yield "Error generating output. Please check your connection or API key.";
+  }
+}
+
+export async function performVibeCheck(input: string, stepLabel: string) {
+  try {
+    const prompt = `Phase: ${stepLabel}\nInput: ${input}`;
+    
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        systemInstruction: `Analyze the user's input for a software architecture phase. 
+        Determine if it's "High Frequency" (focused, ambitious, technically sharp) or "Low Frequency/Noise" (generic, vague, lazy).
+        
+        Return a JSON object:
+        {
+          "rating": number (1-10),
+          "critique": "A brief, 10x-style punchy critique",
+          "isVibeApproved": boolean
+        }`,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            rating: { type: Type.NUMBER },
+            critique: { type: Type.STRING },
+            isVibeApproved: { type: Type.BOOLEAN }
+          },
+          required: ["rating", "critique", "isVibeApproved"]
+        }
+      },
+    });
+
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Vibe Check Error:", error);
+    return { rating: 5, critique: "Neural connection unstable. Vibration check inconclusive.", isVibeApproved: true };
+  }
+}
 
 export async function generateStepOutput(prompt: string, input: string, previousOutput: string = "") {
   try {

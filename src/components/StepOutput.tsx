@@ -69,7 +69,7 @@ export const StepOutput = ({
       </div>
       <div className="p-4 md:p-8">
         {isPreviewMode ? (
-          <div className="prose dark:prose-invert prose-sm max-w-none text-black dark:text-zinc-300 leading-relaxed font-sans min-h-[400px]">
+          <div className="prose dark:prose-invert prose-sm max-w-none text-black dark:text-zinc-300 leading-relaxed font-sans min-h-[400px] relative">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -105,6 +105,14 @@ export const StepOutput = ({
             >
                {currentStepData.aiOutput}
             </ReactMarkdown>
+            {currentStepData.isStreaming && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+                className="inline-block w-2 h-4 bg-black dark:bg-white ml-1 align-middle"
+              />
+            )}
           </div>
         ) : (
           <textarea
