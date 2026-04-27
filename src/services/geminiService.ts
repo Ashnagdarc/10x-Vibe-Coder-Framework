@@ -87,6 +87,42 @@ export async function generateStepOutput(prompt: string, input: string, previous
   }
 }
 
+export async function* generateFinalManifestStreaming(projectData: any) {
+  try {
+    const context = Object.values(projectData.steps).map((s: any, i) => `Step ${i+1}: ${s.aiOutput}`).join("\n\n");
+    const prompt = `Context: All phases of the Vibe Coder workflow have been completed for project "${projectData.name}". 
+    Data: ${context}
+    
+    Task: Synthesize this data into a final "10x Software Manifest". 
+    Include:
+    1. Executive Summary
+    2. Final Architecture Tech Stack
+    3. Critical Success Factors
+    4. Implementation Checklist
+    5. The "Vibe" definition for the final product.
+    
+    Make it look professional, clean, and highly actionable.`;
+
+    const result = await ai.models.generateContentStream({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        systemInstruction: "You are a Senior Technical Product Manager. Synthesize project data into a final PRD.",
+        temperature: 0.5,
+      },
+    });
+
+    for await (const chunk of result) {
+      if (chunk.text) {
+        yield chunk.text;
+      }
+    }
+  } catch (error) {
+    console.error("AI Streaming Error:", error);
+    yield "Error generating manifest.";
+  }
+}
+
 export async function generateFinalManifest(projectData: any) {
   try {
     const context = Object.values(projectData.steps).map((s: any, i) => `Step ${i+1}: ${s.aiOutput}`).join("\n\n");

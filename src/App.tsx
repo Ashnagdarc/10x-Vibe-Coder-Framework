@@ -13,7 +13,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { StepType, StepData, Project, ProjectCollection, STEPS, STORAGE_KEY, PROJECTS_STORAGE_KEY } from './types';
-import { generateStepOutputStreaming, generateFinalManifest, generateInsights, generateSummaryForNextStep, performVibeCheck } from './services/geminiService';
+import { generateStepOutputStreaming, generateFinalManifestStreaming, generateInsights, generateSummaryForNextStep, performVibeCheck } from './services/geminiService';
 import { Vault } from './components/Vault';
 
 // Components
@@ -204,8 +204,16 @@ export default function App() {
 
   const handleGenerateManifest = async () => {
     setIsGeneratingManifest(true);
-    const result = await generateFinalManifest(project);
-    setManifest(result);
+    setManifest("");
+    
+    const stream = generateFinalManifestStreaming(project);
+    let fullManifest = "";
+    
+    for await (const chunk of stream) {
+      fullManifest += chunk;
+      setManifest(fullManifest);
+    }
+    
     setIsGeneratingManifest(false);
   };
 

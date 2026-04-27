@@ -26,6 +26,14 @@ export const Onboarding = ({ onComplete, currentStep: step, onNext }: Onboarding
     groq: ''
   });
 
+  const [activeTheory, setActiveTheory] = useState<number>(0);
+
+  const THEORIES = [
+    { title: "The 7-Step Sequence", desc: "A linear architecture protocol designed to eliminate technical entropy." },
+    { title: "Neural Vibration", desc: "Every input is analyzed for frequency. High intensity thoughts generate superior logic." },
+    { title: "Manifesto Output", desc: "The final artifact is a high-density PDF-ready architecture specification." }
+  ];
+
   const handleNext = () => {
     onNext();
   };
@@ -178,40 +186,53 @@ export const Onboarding = ({ onComplete, currentStep: step, onNext }: Onboarding
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-center relative flex flex-col items-center justify-center"
+            className="w-full max-w-5xl px-12 grid grid-cols-1 md:grid-cols-2 gap-20 items-center"
           >
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.02]">
-              <div className="absolute left-1/4 top-0 w-px h-full bg-white shadow-[0_0_20px_white]" />
-              <div className="absolute right-1/4 top-0 w-px h-full bg-white shadow-[0_0_20px_white]" />
+            <div className="text-left">
+              <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-600 mb-6 block">The Vibe Coder Framework</span>
+              <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-12 italic">CORE_LOGIC.</h1>
+              
+              <div className="space-y-8">
+                {THEORIES.map((theory, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveTheory(idx)}
+                    className={`block w-full text-left p-6 border-l-2 transition-all ${activeTheory === idx ? 'border-white bg-white/5' : 'border-zinc-800 hover:border-zinc-600 text-zinc-500'}`}
+                  >
+                    <h3 className={`text-xl font-black uppercase tracking-tight mb-2 ${activeTheory === idx ? 'text-white' : 'text-zinc-600'}`}>{theory.title}</h3>
+                    <p className="text-sm font-medium leading-relaxed italic">{theory.desc}</p>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1 }}
-              className="relative z-10"
-            >
-              <h1 className="text-[20vw] md:text-[15vw] font-black tracking-[-0.08em] italic leading-[0.75] mb-12 md:mb-16">
-                10X<br/>
-                VIBE<br/>
-                CODER
-              </h1>
-              
-              <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 text-zinc-700 font-black uppercase tracking-[0.8em] text-[10px] md:text-[11px]">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  <span>Protocol_v1.2</span>
-                </div>
-                <span>Founders_Sync</span>
-              </div>
-            </motion.div>
+            <div className="relative aspect-square bg-zinc-950 rounded-3xl border border-white/5 flex items-center justify-center overflow-hidden">
+               {/* Visualizer Mockup */}
+               <div className="absolute inset-x-0 bottom-0 h-1/2 flex items-end gap-1 px-10 opacity-20">
+                 {Array.from({ length: 40 }).map((_, i) => (
+                   <motion.div
+                    key={i}
+                    animate={{ height: [20, Math.random() * 100 + 40, 20] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.05 }}
+                    className="flex-1 bg-white"
+                   />
+                 ))}
+               </div>
 
-            <button 
-              onClick={handleNext}
-              className="mt-32 group p-12 transition-all hover:scale-125 cursor-pointer"
-            >
-              <ChevronRight className="w-24 h-24 text-white/5 group-hover:text-white transition-colors" />
-            </button>
+               <div className="relative z-10 text-center">
+                 <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mb-6 mx-auto">
+                    <Zap className="w-8 h-8 text-white animate-pulse" />
+                 </div>
+                 <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white">Vibe_Protocol_Active</span>
+               </div>
+               
+               <button 
+                onClick={handleNext}
+                className="absolute bottom-10 right-10 p-6 bg-white text-black rounded-full hover:scale-110 transition-transform cursor-pointer"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
           </motion.div>
         )}
 

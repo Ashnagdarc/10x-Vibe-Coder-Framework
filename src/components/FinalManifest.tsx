@@ -24,13 +24,16 @@ export const FinalManifest = ({
   projectName,
   handleGenerateManifest
 }: FinalManifestProps) => {
+  const [isShared, setIsShared] = React.useState(false);
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert('Share protocol initialized. Link copied to clipboard.');
+    setIsShared(true);
+    setTimeout(() => setIsShared(false), 2000);
   };
 
   return (
@@ -57,10 +60,10 @@ export const FinalManifest = ({
               </button>
               <button 
                 onClick={handleShare}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${isShared ? 'bg-green-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black'}`}
               >
                 <Share2 className="w-3 h-3" />
-                Share protocol
+                {isShared ? 'Protocol Synced' : 'Share protocol'}
               </button>
             </div>
           )}

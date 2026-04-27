@@ -87,7 +87,18 @@ export const StepEditor = ({
           <div className={`p-4 rounded-xl border flex items-start gap-4 animate-in fade-in slide-in-from-top-2 duration-500 ${currentStepData.vibeCheck.isVibeApproved ? 'bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30'}`}>
             <div className="flex-1">
                <div className="flex items-center justify-between mb-2">
-                 <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Vibration_Check</span>
+                 <div className="flex items-center gap-2">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Vibration_Check</span>
+                   <div className="group relative">
+                      <div className="w-3 h-3 rounded-full border border-zinc-400 dark:border-zinc-600 flex items-center justify-center text-[8px] font-black cursor-help text-zinc-400 group-hover:text-black dark:group-hover:text-white group-hover:border-black dark:group-hover:border-white transition-colors">?</div>
+                      <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold uppercase tracking-wider rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 shadow-2xl">
+                        <span className="text-zinc-500 mb-1 block">Neural Logic:</span>
+                        High Freq = Focused, technical, sharp vision.
+                        <br/><br/>
+                        Low Freq = Vague, generic, or passive goals.
+                      </div>
+                   </div>
+                 </div>
                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${currentStepData.vibeCheck.isVibeApproved ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-red-500 text-white'}`}>
                    FREQ_{currentStepData.vibeCheck.rating}/10
                  </span>
