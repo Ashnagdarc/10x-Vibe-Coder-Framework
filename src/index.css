@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --color-zinc-950: #09090B;
+  --color-zinc-900: #121214;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  :root {
+    --bg: #FFFFFF;
+    --aside: #F8F8F8;
+    --card: #FFFFFF;
+    --text: #000000;
+    --text-muted: #666666;
+    --border: #E5E5E5;
+    --input: #FFFFFF;
+    --accent: #000000;
+    --selection: rgba(0, 0, 0, 0.1);
+  }
+
+  .dark {
+    --bg: #000000;
+    --aside: #0A0A0A;
+    --card: #0A0A0A;
+    --text: #FFFFFF;
+    --text-muted: #888888;
+    --border: #222222;
+    --input: #0A0A0A;
+    --accent: #FFFFFF;
+    --selection: rgba(255, 255, 255, 0.2);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    @apply antialiased font-sans transition-colors duration-300;
+  }
+  
+  ::selection {
+    background-color: var(--selection);
+  }
+}
+
+@layer utilities {
+  .prose-invert {
+    --tw-prose-body: var(--color-zinc-300);
+    --tw-prose-headings: var(--color-white);
+    --tw-prose-links: var(--color-white);
+    --tw-prose-bold: var(--color-white);
+    --tw-prose-counters: var(--color-zinc-500);
+    --tw-prose-bullets: var(--color-zinc-500);
+    --tw-prose-hr: var(--color-white/10);
+    --tw-prose-quotes: var(--color-zinc-100);
+    --tw-prose-quote-borders: var(--color-zinc-700);
+    --tw-prose-captions: var(--color-zinc-500);
+    --tw-prose-code: var(--color-white);
+    --tw-prose-pre-code: var(--color-zinc-200);
+    --tw-prose-pre-bg: var(--color-zinc-900);
+    --tw-prose-th-borders: var(--color-zinc-700);
+    --tw-prose-td-borders: var(--color-zinc-800);
+  }
+}
+
+/* Custom transitions */
+.transition-heavy {
+  @apply transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)];
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-white/20;
+}
+
+/* View Transition Support */
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0% at var(--vt-x) var(--vt-y));
+  }
+  to {
+    clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
+  }
+}
+
+::view-transition-new(root) {
+  animation: theme-reveal 500ms ease-in-out;
+}
+
+::view-transition-old(root) {
+  animation: none;
+}
